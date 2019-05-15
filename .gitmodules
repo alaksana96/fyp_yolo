@@ -1,3 +1,0 @@
-[submodule "darknet"]
-	path = /src/fyp_yolo/src/darknet
-	url = https://github.com/alaksana96/darknet.git
