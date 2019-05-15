@@ -1,0 +1,3 @@
+[submodule "src/fyp_yolo/src/darknet"]
+	path = src/fyp_yolo/src/darknet
+	url = git@github.com:alaksana96/darknet.git
