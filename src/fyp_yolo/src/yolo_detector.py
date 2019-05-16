@@ -19,8 +19,11 @@ sys.path.insert(0, darknetPythonPath)
 import darknet as dn
 
 import rospy
+# from   rospy.numpy_msg import numpy_msg
 from   sensor_msgs.msg import CompressedImage
 import cv_bridge as bridge
+
+from fyp_yolo.msg import BoundingBox, BoundingBoxes
 
 import cv2
 import numpy as np
@@ -30,12 +33,14 @@ import pdb
 
 class yolo_detector:
 
-    def __init__(self):
+    def __init__(self, debug = 0):
+        
+        self.debug = debug
 
         dn.set_gpu(0)
 
         self.net  = dn.load_net(os.path.join(darknetPath, 'cfg/yolov3-tiny.cfg'),
-                        os.path.join(darknetPath, 'yolov3-tiny.weights'),
+                        os.path.join(darknetPath, 'weights/yolov3-tiny.weights'),
                         0)
         self.meta = dn.load_meta(os.path.join(darknetPath, 'cfg/coco.data'))
 
@@ -44,16 +49,58 @@ class yolo_detector:
                                             CompressedImage, 
                                             self.callback, 
                                             queue_size = 10 )
-        # self.publisher  = rospy.Publisher('yolo_detector/output/detections')
+
+        self.publisherDetections = rospy.Publisher('yolo_detector/output/detections',
+                                                    BoundingBoxes,
+                                                    queue_size = 10 )
+                                                
+
+        self.publisherImage    = rospy.Publisher('yolo_detector/output/compressed',
+                                                 CompressedImage,
+                                                 queue_size = 10 )
 
 
     def callback(self, ros_data):
         img = cv2.imdecode(np.fromstring(ros_data.data, np.uint8), 1)
 
-        r = dn.detect(self.net, self.meta, img)
-        print(r)
+        detections = dn.detect(self.net, self.meta, img)
+        
+        msgDetections = BoundingBoxes()
+        msgDetections.header = ros_data.header
 
-        for detected in r:
+        for detected in detections:
+
+            x = int(detected[2][0])
+            y = int(detected[2][1])
+
+            w = int(detected[2][2] / 2)
+            h = int(detected[2][3] / 2 )
+            
+            msgDetection = BoundingBox()
+            
+            msgDetection.Class       = detected[0]
+            msgDetection.probability = detected[1]
+            msgDetection.xmin        = x - w
+            msgDetection.ymin        = y - h
+            msgDetection.xmax        = x + w
+            msgDetection.ymax        = y + h
+
+            msgDetections.bounding_boxes.append(msgDetection)
+
+        # Publish Detections
+        self.publisherDetections.publish(msgDetections)
+        # Publish Image Frame
+        self.publisherImage.publish(ros_data)
+
+        # Display Bounding Boxes & Print Detections
+        if self.debug > 0:
+            print(detections)
+            self.displayDetections(detections, img)
+
+
+    def displayDetections(self, detections, img):
+
+        for detected in detections:
             # x,y co-ordinates are the centre of the object
             x = int(detected[2][0])
             y = int(detected[2][1])
@@ -72,7 +119,7 @@ class yolo_detector:
 
 def main(args):
     
-    yd = yolo_detector()
+    yd = yolo_detector(debug = 1)
     rospy.init_node('yolo_detector', anonymous=True)
 
     try:
