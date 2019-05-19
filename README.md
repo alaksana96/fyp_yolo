@@ -8,7 +8,9 @@ My implementation of a ROS Node that utilizes the Python API of the original Dar
 
 Open the ``src/fyp_yolo/msg`` folder to see the custom messages:
 
-* **`BoundingBox`** Contains the individual detections.
+* **`BoundingBox`** 
+
+    Contains the individual detections.
 
     ```
     string Class
@@ -19,11 +21,14 @@ Open the ``src/fyp_yolo/msg`` folder to see the custom messages:
     int64 ymax
     ```
 
-* **`BoundingBoxes`** Contains the list of detections.
+* **`CompressedImageAndBoundingBoxes`** 
+    
+    Contains the original compressed image and the resulting detections.
 
     ```
     Header header
-    Header image_header
+    string format
+    uint8[] data
     BoundingBox[] bounding_boxes
     ```
 
@@ -37,13 +42,9 @@ Open the ``src/fyp_yolo/msg`` folder to see the custom messages:
 
 ### Published Topics
 
-* **`/yolo_detector/output/compressed`** ([sensor_msg::CompressedImage])
+* **`/yolo_detector/output/compresseddetections`** ([fyp_yolo::CompressedImageAndBoundingBoxes])
 
-    Publish the same compressed image that the node subscribes too.
-
-* **`/yolo_detector/output/detections`** ([fyp_yolo::BoundingBoxes])
-
-    Publish the detections from the YOLO detector.
+    Publish the original compressed image and the detections from the YOLO detector.
 
 
 # Useful Commands

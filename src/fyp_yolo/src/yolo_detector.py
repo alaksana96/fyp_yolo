@@ -19,11 +19,10 @@ sys.path.insert(0, darknetPythonPath)
 import darknet as dn
 
 import rospy
-# from   rospy.numpy_msg import numpy_msg
 from   sensor_msgs.msg import CompressedImage
 import cv_bridge as bridge
 
-from fyp_yolo.msg import BoundingBox, BoundingBoxes
+from fyp_yolo.msg import BoundingBox, CompressedImageAndBoundingBoxes
 
 import cv2
 import numpy as np
@@ -48,16 +47,11 @@ class yolo_detector:
         self.subscriber = rospy.Subscriber('image_transport/compressed', 
                                             CompressedImage, 
                                             self.callback, 
-                                            queue_size = 10 )
+                                            queue_size = 10 )                                                
 
-        self.publisherDetections = rospy.Publisher('yolo_detector/output/detections',
-                                                    BoundingBoxes,
-                                                    queue_size = 10 )
-                                                
-
-        self.publisherImage    = rospy.Publisher('yolo_detector/output/compressed',
-                                                 CompressedImage,
-                                                 queue_size = 10 )
+        self.publisherImageAndDetections = rospy.Publisher('yolo_detector/output/compresseddetections',
+                                                           CompressedImageAndBoundingBoxes,
+                                                           queue_size = 10)
 
 
     def callback(self, ros_data):
@@ -65,8 +59,7 @@ class yolo_detector:
 
         detections = dn.detect(self.net, self.meta, img)
         
-        msgDetections = BoundingBoxes()
-        msgDetections.header = ros_data.header
+        msgDetections = []
 
         for detected in detections:
 
@@ -85,12 +78,17 @@ class yolo_detector:
             msgDetection.xmax        = x + w
             msgDetection.ymax        = y + h
 
-            msgDetections.bounding_boxes.append(msgDetection)
+            msgDetections.append(msgDetection)
 
-        # Publish Detections
-        self.publisherDetections.publish(msgDetections)
-        # Publish Image Frame
-        self.publisherImage.publish(ros_data)
+        # Publish detections
+        msgImageAndDetections = CompressedImageAndBoundingBoxes()
+
+        msgImageAndDetections.format         = 'jpg'
+        msgImageAndDetections.data           = ros_data.data
+        msgImageAndDetections.bounding_boxes = msgDetections
+
+        self.publisherImageAndDetections.publish(msgImageAndDetections)
+
 
         # Display Bounding Boxes & Print Detections
         if self.debug > 0:
@@ -113,7 +111,7 @@ class yolo_detector:
             labelText = '{}: {:.4f}'.format(detected[0], detected[1])
             cv2.putText(img, labelText, (x, y - h), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255,0,0))
 
-        cv2.imshow('test', img)
+        cv2.imshow('yolo: yolo_detector.py', img)
         cv2.waitKey(3)
 
 
