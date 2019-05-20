@@ -4,6 +4,16 @@
 
 My implementation of a ROS Node that utilizes the Python API of the original Darknet YOLO detector.
 
+### Usage
+
+* ``self.debug`` 
+    
+    Set to > 0 to display detections and debugging messages
+
+* ``self.flip``
+
+    Set to True to mirror horizontally
+
 ## Custom Messages
 
 Open the ``src/fyp_yolo/msg`` folder to see the custom messages:
