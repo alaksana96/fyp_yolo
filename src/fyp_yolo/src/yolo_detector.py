@@ -32,9 +32,13 @@ import pdb
 
 class yolo_detector:
 
-    def __init__(self, debug = 0):
+    def __init__(self, debug = 0, flip = False):
         
         self.debug = debug
+
+        self.flip   = flip
+
+        self.bridge = bridge.CvBridge()
 
         dn.set_gpu(0)
 
@@ -56,6 +60,9 @@ class yolo_detector:
 
     def callback(self, ros_data):
         img = cv2.imdecode(np.fromstring(ros_data.data, np.uint8), 1)
+        
+        if self.flip:
+            img = cv2.flip(img, 1)
 
         detections = dn.detect(self.net, self.meta, img)
         
@@ -83,8 +90,13 @@ class yolo_detector:
         # Publish detections
         msgImageAndDetections = CompressedImageAndBoundingBoxes()
 
+        if self.flip:
+            compressed                 = self.bridge.cv2_to_compressed_imgmsg(img, 'jpg')
+            msgImageAndDetections.data = compressed.data
+        else:
+            msgImageAndDetections.data = ros_data.data
+
         msgImageAndDetections.format         = 'jpg'
-        msgImageAndDetections.data           = ros_data.data
         msgImageAndDetections.bounding_boxes = msgDetections
 
         self.publisherImageAndDetections.publish(msgImageAndDetections)
@@ -117,7 +129,7 @@ class yolo_detector:
 
 def main(args):
     
-    yd = yolo_detector(debug = 1)
+    yd = yolo_detector(debug = 1, flip = True)
     rospy.init_node('yolo_detector', anonymous=True)
 
     try:
