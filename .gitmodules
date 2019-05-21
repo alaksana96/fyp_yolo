@@ -1,0 +1,3 @@
+[submodule "src/fyp_yolo/src/darknet-crowdhuman"]
+	path = src/fyp_yolo/src/darknet-crowdhuman
+	url = git@github.com:alaksana96/darknet-crowdhuman.git

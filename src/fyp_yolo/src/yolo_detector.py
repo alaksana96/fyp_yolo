@@ -42,10 +42,10 @@ class yolo_detector:
 
         dn.set_gpu(0)
 
-        self.net  = dn.load_net(os.path.join(darknetPath, 'cfg/yolov3-tiny.cfg'),
-                        os.path.join(darknetPath, 'weights/yolov3-tiny.weights'),
+        self.net  = dn.load_net(os.path.join(darknetPath, 'cfg/yolov3-tiny-crowdhuman.cfg'),
+                        os.path.join(darknetPath, 'weights/yolov3-tiny-crowdhuman_30000.weights'),
                         0)
-        self.meta = dn.load_meta(os.path.join(darknetPath, 'cfg/coco.data'))
+        self.meta = dn.load_meta(os.path.join(darknetPath, 'cfg/yolo_crowdhuman.data'))
 
 
         self.subscriber = rospy.Subscriber('image_transport/compressed', 
@@ -129,7 +129,7 @@ class yolo_detector:
 
 def main(args):
     
-    yd = yolo_detector(debug = 1, flip = True)
+    yd = yolo_detector(debug = 1, flip = False)
     rospy.init_node('yolo_detector', anonymous=True)
 
     try:
