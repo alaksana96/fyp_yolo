@@ -10,7 +10,7 @@ absFilePath = os.path.abspath(__file__)
 fileDir     = os.path.dirname(absFilePath)
 parentDir   = os.path.dirname(fileDir)
 
-darknetPath = os.path.join(parentDir, 'src/darknet')
+darknetPath = os.path.join(parentDir, 'src/darknet-crowdhuman')
 darknetPythonPath = os.path.join(darknetPath, 'python')
 
 print('Adding Darknet to Python Path by inserting: {}'.format(darknetPythonPath))
