@@ -27,14 +27,17 @@ from fyp_yolo.msg import BoundingBox, CompressedImageAndBoundingBoxes
 import cv2
 import numpy as np
 
-import pdb
-
+import time
 
 class yolo_detector:
 
     def __init__(self, debug = 0, flip = False):
         
         self.debug = debug
+        self.frameCount = 0
+        self.frameSkip  = 10
+
+        self.timePrev = time.time()
 
         self.flip   = flip
 
@@ -43,7 +46,7 @@ class yolo_detector:
         dn.set_gpu(0)
 
         self.net  = dn.load_net(os.path.join(darknetPath, 'cfg/yolov3-tiny-crowdhuman.cfg'),
-                        os.path.join(darknetPath, 'weights/yolov3-tiny-crowdhuman_30000.weights'),
+                        os.path.join(darknetPath, 'weights/yolov3-tiny-crowdhuman.backup'),
                         0)
         self.meta = dn.load_meta(os.path.join(darknetPath, 'cfg/yolo_crowdhuman.data'))
 
@@ -104,8 +107,21 @@ class yolo_detector:
 
         # Display Bounding Boxes & Print Detections
         if self.debug > 0:
+
+            #FPS
+            if(self.frameCount % self.frameSkip == 0):
+                timer = time.time() - self.timePrev
+                self.intFPS = int(self.frameSkip/timer)
+                print(self.intFPS)
+                self.timePrev = time.time()
+
+            # Print FPS
+            cv2.putText(img, 'FPS: {}'.format(self.intFPS), (img.shape[1] - 100, 25), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255,0,0), 2)
+
             print(detections)
             self.displayDetections(detections, img)
+
+        self.frameCount += 1
 
 
     def displayDetections(self, detections, img):
@@ -129,7 +145,7 @@ class yolo_detector:
 
 def main(args):
     
-    yd = yolo_detector(debug = 1, flip = False)
+    yd = yolo_detector(debug = 1, flip = True)
     rospy.init_node('yolo_detector', anonymous=True)
 
     try:
